@@ -295,21 +295,29 @@ Describe how GenAI is used in producing this homework, include prompt, date, mod
 
 ::: {.callout-note title="Your Answer"}
 
-I used Claude.ai version 4.6 (online version) to figure out how to add the data folder to my .gitignore file on June 1, 2026. 
+1) I used Claude.ai version 4.6 (online version) to figure out how to add the data folder to my .gitignore file on June 1, 2026. 
 
 Initial Prompt: How do I add a data folder to gitignore? + followup clarifications found at https://claude.ai/share/425015c4-7229-41c2-8f3e-a5ea95db985b
 
-I used Claude.ai version 4.6 (online version) on June 1 to figure out how to check for missing values without removing them. 
+2) I used Claude.ai version 4.6 (online version) on June 1 to figure out how to check for missing values without removing them. 
 
 Prompt: How can i inspect a dataframe for missing values in R without removing them?
 https://claude.ai/share/30aa2a60-9d48-4eab-83a7-b153499132a7
 
-In my unsuccessful efforts to create decade facets, I had a conversation with Claude.ai version 4.6 (online version) to figure out how to change my axes. 
+3) In my unsuccessful efforts to create decade facets, I had a conversation with Claude.ai version 4.6 (online version) on June 1 to figure out how to change my axes. 
 
 prompt: I'm making a faceted area chart and want to break it down into facets by decade. I have done this successfully, but how do i get each facet to show a different ten years, eg. not have the x axes be fixed?
 
 https://claude.ai/share/a4461bf0-e543-4182-bfdd-6361a38749e2
 
+4) I used Claude.ai version 4.6 online version on June 1 to debug my code and found out I needed to rename my dataframe to include a new column I created
+
+Prompt: help me debug in df_disasters %>% mutate(decade = case_when(year <= 1980 | year <=  : 
+  could not find function "%>%"
+  
+Prompt: need to rename my table after mutating to add new column
+
+https://claude.ai/share/6520b7a1-8441-4f9c-8c63-99b703d0860e
 
 
 
