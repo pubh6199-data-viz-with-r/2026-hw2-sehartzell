@@ -1,7 +1,7 @@
 ---
 title: "Homework 2"
-author: "Your Name"
-date: "2025-XX-XX"
+author: "Sharon Hartzell"
+date: "2026-06-01"
 params:
   number: 2
   purpose: "The purpose of this assignment is to practice the visual channels and design principles we covered in class and let you get hands-on experience of working with real-world data."
@@ -9,7 +9,7 @@ format:
   html:
     toc: true
     toc-location: right
-    theme: flatly
+    theme: journal
     self-contained: true
 execute:
   echo: true
@@ -60,8 +60,9 @@ You will use the NOAA Billion-Dollar Disaster dataset to explore how visual enco
 ### Load Required Packages
 
 ```{r}
-library(tidyverse)
-library(janitor)
+library(tidyverse) #Allows me to use an interconnected set of packages including ggplot2 to create sophisticated visualizations, and dplyr to allow manipulation of data
+library(janitor) #Enables cleaning of dirty datasets
+library(gghighlight) #Enables me to select specific geometric objects in my visualizations 
 # load other packages as you see fit but remember to add comments to explain what each package does
 ```
 
@@ -76,13 +77,19 @@ Following these steps to download and read in the dataset:
 
 3. Add your data/ folder to .gitignore to avoid pushing data to GitHub.
 
+# in the terminal, I entered the following to add data folder to .gitignore
+touch .gitignore
+echo "data/" >> .gitignore 
+
 4. Read in the CSV file using `read_csv()`
 
-```{r, eval=FALSE}
+```{r}
 # remove the eval=FALSE when you render quarto document
-df_disasters <- read_csv("data/events-US-1980-2024-Q4.csv", skip = 2) |>
-  janitor::clean_names()
+df_disasters <- read_csv("data/events-US-1980-2024-Q4.csv", skip = 2) |> #Reading in the CSV file to a data frame
+  janitor::clean_names() #Function within janitor package used to return a data frame with clean names (case, placement of numbers, replacement of Greek symbols to ASCII, etc.)
 # the skip argument is used to skip the first two rows of the CSV file, which contain metadata about the dataset.
+
+head(df_disasters) #familiarizing myelf with the titles of variables in the data frame 
 ```
 
 5. Skim through the dataset to get familiar with the variable names, especially:
@@ -95,10 +102,12 @@ df_disasters <- read_csv("data/events-US-1980-2024-Q4.csv", skip = 2) |>
 
 6. Create a new column `year` that extracts the year from the `begin_date` column. You can use the `lubridate` package to do this.
 
-```{r, eval=FALSE}
+```{r}
 # remove the eval=FALSE when you render quarto document
 df_disasters <- df_disasters |>
   mutate(year = lubridate::year(ymd(begin_date)))
+
+head(df_disasters) #checking that year column was added correctly 
 ```
 
 7. Explore the dataset and answer these questions:
@@ -108,15 +117,42 @@ df_disasters <- df_disasters |>
 - Calculate the total CPI-adjusted cost of disasters per year. Identify the top 3 most expensive years.
 
 ```{r}
-#your code here
+#your code here: Exploring the data set:
+
+# Are there any missing or sero values? 
+df_disasters %>%
+  filter(deaths == 0) #filtering by deaths = 0, we see that 101 disasters have 0 deaths 
+
+df_disasters %>%
+  filter(cpi_adjusted_cost == 0) #filtering by cpi adjusted cost = 0, we see that no disasters have 0 values
+
+df_disasters %>%
+  filter(unadjusted_cost == 0) #filtering by unadjusted cost, we also have no disasters with 0 values
+
+anyNA(df_disasters) #Ran this function to see if any values are missing 
+
+# What are the five most common disaster types? 
+df_disasters %>%
+  count(disaster) %>% #Using count function to generate a count for each disaster type, to see what the most common disaster types are 
+  arrange(desc(n)) # arranging in descending order of count
+
+# Most expensive years
+
+df_disasters %>%
+  group_by(year) %>% #Grouping by the newly created year column 
+  summarise(total_cpi_adj_cost = sum(cpi_adjusted_cost)) %>% #creating a summary table that calculates the sum of cpi adjusted cost for each year 
+  arrange(desc(total_cpi_adj_cost)) #arranging in descending order to easily see most expensive years 
+
+
+
+
 ```
 
 ::: {.callout-note title="Your Answer"}
-- Missing data:
-- 5 most disaster types:
-- 3 most expensive years by CPI-adjusted cost:
+- Missing data: There are no missing data values, but we have 101 storm events where the number of deaths was 0. This should not create too many problems for my visualizations, though I know I will not be able to truncate any axes that represent deaths. 
+- 5 most disaster types: Severe Storm (n = 203), Tropical Cyclone (n = 67), Flooding (n = 45), Drought (n = 32), and Winter Storm (n = 24)
+- 3 most expensive years by CPI-adjusted cost: The three most expensive years were 2017, 2005, and 2022
 :::
-
 
 
 ## Q2: Build your visualization
@@ -138,13 +174,33 @@ Your final visualization should:
 - Include at least one theme adjustments (e.g., axis labels, legend position, font size) to improve readability/visual appeal
 
 ```{r}
-#your code here
+#your code here: Comparing trends in natural disaster frequency and cost by decade
+
+df_disasters_decade <-df_disasters %>% # with this block of code, I am creating a new column breaking the dataset into decades in case I want to group or facet by decade, or call out specific decades by highlighting 
+  mutate(decade = case_when(
+    year <= 1980 | year <= 1989 ~ "1980s",
+    year <= 1990 | year <= 1999 ~ "1990s", 
+    year <= 2000 | year <= 2009 ~ "2000s",
+    year <= 2010 | year <= 2019 ~ "2010s",
+    year <= 2020 | year <= 2024 ~ "2020s"
+  ))
+
+head(df_disasters) #checking that the column was created correctly
+
+df_disasters_decade %>%
+  ggplot(aes(x = year, y = cpi_adjusted_cost, group = disaster, fill = disaster)) + #setting the x axis to year, y to cpi adjusted cost, group to disaster
+  geom_area() + #setting chart type as area 
+  labs(title = "Trends in Disaster Costs", subtitle = "Costliest Disaster Types Shift with Time", x = "Year", y = "CPI Adjusted Cost", caption = "Data: NOAA Billion-Dollar Disasters (accessed 2025)") + #changing labels, captions, title, and subtitle
+  theme_classic() + #setting theme as classic 
+  theme(legend.position = "bottom") #changing legend position 
+  
+
 ```
 
 What do you notice about the trends over time in the frequency and/or cost of disasters? Anything unexpected?
 
 ::: {.callout-note title="Your Answer"}
-Type your response here.
+The cost of disaster has not uniformly increased over time, though costs have reached higher peaks since 2010. The most intriguing trend was the shifts over time in the types of disasters that are most costly. While drought was more costly in the 1980s, it now seems to comprise a smaller portion of total disaster costs, with tropical cyclones making up a larger proprtion of the costs. Both wildfires and winter storms have increased greatly over the last ten years. Overall, some oscillation from year to year is observable, perhaps reflecting global climate patterns (El Niño, La Niña, etc.) 
 :::
 
 ## Q3: Reflection
@@ -152,27 +208,26 @@ Type your response here.
 a. What are your variables of interest and what kinds of data (e.g., numeric, categorical, ordered, etc.) are they?
 
 ::: {.callout-note title="Your Answer"}
-Type your response here.
+My variables of interest are year (numeric, ordered), adjusted cost of disaster (numeric), and disaster type (categorical)
 :::
 
 b. How did you decide which type of graphic form was best suited for answering the question?
 What alternative graphic forms could you have used instead? Why did you settle on this particular form?
 
 ::: {.callout-note title="Your Answer"}
-Type your response here.
+I tried a few different types of graphics for this chart. Mostly, I was choosing between line graphs and area graphs, and tried both, because they are both well suited to showing trends over time. Ultimately, the line graph was less clear in portraying the comparative costs of different disaster types across years, so although area graphs have compromises in terms of data to ink ratios, I landed on an area chart. 
 :::
 
 c. What modifications did you make to this viz to improve readability and accessibility?
 
 ::: {.callout-note title="Your Answer"}
-Type your response here.
+I shifted the disaster type legend to be below the graph, which gave my chart more horizontal room to show temporal trends. I also broke my data down by disaster type in different colors to show the relative contribution of each type of disaster to overall costs. Lastly, I added descriptive labels, titles, and captions to improve readability, and changed the theme to a simple classic style. 
 :::
 
 d. Is there anything you wanted to implement but didn’t know how? If so, describe it.
 
 ::: {.callout-note title="Your Answer"}
-Type your response here.
-:::
+I was attempting to break my data down into facets by decade, so that I could show decadal trends. While I successfully created a new decade column, and successfully implemented a free x axis so that differences between the decades could be observed, I was not able to change my final decade (2020s) to show all the years with missing data as blank, so I ultimately abandoned this idea. I wanted to see finer-scale trends from year to year but the ultimate layout was confusing, and I would have been in an undesirable position of having to free my y axis to actually see the trends. 
 
 ## Q4: Critique the original graph from NOAA
 
@@ -187,7 +242,8 @@ a. Describe the graphic
 - What is the intended takeaway?
 
 ::: {.callout-note title="Your Answer"}
-Type your response here.
+The original NOAA graphic is a mix of a line chart and a stacked bar chart. 
+The line elements of the graph encode combined disaster cost (along with 95% confidence intervals) and separately, 5-year average costs, while the stacked bar charts encode counts of different types of disaster events, demarcated by color. The intended takeaway is that disaster costs have spiked and decreased over time in alternating patterns, with the 5-year average costs generally increasing, as well as the fact that severe storms have grown more numberous over time. 
 :::
 
 b. Assess strengths
@@ -196,7 +252,7 @@ b. Assess strengths
 - Is there anything done particularly well in terms of accessibility, color use, or labeling?
 
 ::: {.callout-note title="Your Answer"}
-Type your response here.
+The line chart aspects are most successful in communicating the message of the data, in my opinion. They show several different ways of measuring cost over time. I also think the height of the bars is illustrative, showing that overall counts of disasters have increased over time. 
 :::
 
 c. Assess limitations
@@ -206,7 +262,7 @@ c. Assess limitations
 - Does the chart overcomplicate the message or try to show too much?
 
 ::: {.callout-note title="Your Answer"}
-Type your response here.
+The chart is visually cluttered overall, largely stemming from the use of two overlapping chart types in one graph. The two y axes are also confusing because they are on such different scales. When I first looked at the chart, I was under the impression it was meant to communicate share of costs contributed by each disaster type, not just the counts of disasters themselves. When I visualized this in my own graph, I saw quite different trends - for example, tropical cyclones are not increasing in frequency as much as severe storms, but they are according to my graph becoming more and more costly over time. Additionally, the stacked bar chart makes it difficult to assess trends across disaster type. 
 :::
 
 d. Recommend improvements
@@ -215,7 +271,9 @@ d. Recommend improvements
 - Would you consider separating out the lines from the stacked bars? Using interactivity? Changing the layout?
 
 ::: {.callout-note title="Your Answer"}
-Type your response here.
+1) If I were to include both bar chart and line chart, I would use a neutral bar chart showing only a total count of disasters, rather than breaking it down by type. This would show that as disasters increased, costs have also increased, but it would not be as cluttered or hard to read, and the colors would not detract from the financial trends. 
+
+2) I would create a separate plot to show how disaster counts have changed, but rather than using a stacked bar chart I would change it to a parallel coordinate plot. 
 :::
 
 
@@ -236,7 +294,28 @@ Type your reflection here.
 Describe how GenAI is used in producing this homework, include prompt, date, model version, and link to chat history.
 
 ::: {.callout-note title="Your Answer"}
-Type your response here.
+
+I used Claude.ai version 4.6 (online version) to figure out how to add the data folder to my .gitignore file on June 1, 2026. 
+
+Initial Prompt: How do I add a data folder to gitignore? + followup clarifications found at https://claude.ai/share/425015c4-7229-41c2-8f3e-a5ea95db985b
+
+I used Claude.ai version 4.6 (online version) on June 1 to figure out how to check for missing values without removing them. 
+
+Prompt: How can i inspect a dataframe for missing values in R without removing them?
+https://claude.ai/share/30aa2a60-9d48-4eab-83a7-b153499132a7
+
+In my unsuccessful efforts to create decade facets, I had a conversation with Claude.ai version 4.6 (online version) to figure out how to change my axes. 
+
+prompt: I'm making a faceted area chart and want to break it down into facets by decade. I have done this successfully, but how do i get each facet to show a different ten years, eg. not have the x axes be fixed?
+
+https://claude.ai/share/a4461bf0-e543-4182-bfdd-6361a38749e2
+
+
+
+
+
+
+
 :::
 
 ## Save and Push Your Work
